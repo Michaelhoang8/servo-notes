@@ -1,0 +1,23 @@
+{
+  "dt": 0.02,
+  "steps": 1000,
+  "gain": 1,
+  "tau": 1.5,
+  "initial": 0,
+  "kp": 2,
+  "ki": 1,
+  "kd": 0.1,
+  "filterTau": 0.1,
+  "kb": 2,
+  "minimum": 0,
+  "maximum": 1,
+  "delay": 2,
+  "highTarget": 1.5,
+  "returnTarget": 0.5,
+  "stepAt": 50,
+  "returnAt": 500,
+  "disturbance": -0.2,
+  "disturbanceAt": 700,
+  "noise": 0,
+  "seed": 73
+}

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Servo Notes · Sampled control</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header>
+      <a href="/">servo notes <span aria-hidden="true">∿</span></a
+      ><span>EMBEDDED CONTROL / EXPERIMENT BOOK</span
+      ><button id="open">Open experiment</button
+      ><input id="file" type="file" accept=".json" hidden />
+    </header>
+    <main>
+      <div class="intro">
+        <p class="eyebrow">When the actuator reaches its limit.</p>
+        <h1>Find the way<br /><em>back to steady.</em></h1>
+        <p>
+          Compare three PID controllers through saturation, command delay, and a
+          change of course.
+        </p>
+      </div>
+      <form id="tuning" class="tuning">
+        <label
+          >Proportional Kp<input
+            id="kp"
+            type="number"
+            min="0"
+            max="50"
+            step="any"
+            value="2"
+            required /></label
+        ><label
+          >Integral Ki<input
+            id="ki"
+            type="number"
+            min="0"
+            max="50"
+            step="any"
+            value="1"
+            required /></label
+        ><label
+          >Derivative Kd<input
+            id="kd"
+            type="number"
+            min="0"
+            max="20"
+            step="any"
+            value="0.1"
+            required /></label
+        ><label
+          >Back-calculation Kb<input
+            id="kb"
+            type="number"
+            min="0"
+            max="50"
+            step="any"
+            value="2"
+            required /></label
+        ><button class="primary">Run comparison</button
+        ><button id="example" type="button">Example</button>
+      </form>
+      <p id="status" role="status" aria-live="polite"></p>
+      <section id="result" hidden>
+        <div class="legend">
+          <span class="none">Ordinary PID</span
+          ><span class="conditional">Conditional integration</span
+          ><span class="backCalculation">Back-calculation</span
+          ><span class="target">Setpoint</span>
+        </div>
+        <div class="chart-wrap">
+          <svg
+            id="chart"
+            viewBox="0 0 1000 680"
+            role="img"
+            aria-label="Output, actuator command and integral-state comparison"
+            xmlns="http://www.w3.org/2000/svg"
+          ></svg>
+        </div>
+        <p class="hint">
+          Click the plot or use the time slider to inspect a sample. Curves show
+          true plant output, commanded actuator input, and the integral state
+          after each controller update.
+        </p>
+        <div class="transport">
+          <button id="play">Play cursor</button
+          ><label
+            >Inspection time<input
+              id="step"
+              type="range"
+              min="0"
+              value="0" /></label
+          ><span id="time"></span>
+        </div>
+        <div class="section-heading">
+          <h2>At this instant.</h2>
+          <label
+            >Controller<select id="mode">
+              <option value="none">Ordinary PID</option>
+              <option value="conditional">Conditional integration</option>
+              <option value="backCalculation">Back-calculation</option>
+            </select></label
+          >
+        </div>
+        <div id="sample" class="sample"></div>
+        <p id="sample-note" class="hint"></p>
+        <div class="section-heading">
+          <h2>Across the experiment.</h2>
+          <span id="model-note"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Controller</th>
+                <th>Total IAE</th>
+                <th>Recovery IAE</th>
+                <th>RMSE</th>
+                <th>Saturated steps</th>
+                <th>Peak |integral|</th>
+                <th>Final error</th>
+              </tr>
+            </thead>
+            <tbody id="metrics"></tbody>
+          </table>
+        </div>
+        <p class="hint">
+          IAE integrates absolute true tracking error over the sampled
+          intervals. Recovery IAE starts at the return setpoint. RMSE also uses
+          true output, not noisy measurements. Metrics for an interrupted run
+          cover only its completed prefix.
+        </p>
+        <div class="exports">
+          <button id="save">Save experiment</button
+          ><button id="export">Export all traces</button
+          ><button id="csv">Export sample CSV</button
+          ><button id="svg">Export chart SVG</button>
+        </div>
+      </section>
+      <details>
+        <summary>Edit plant, timing &amp; disturbances</summary>
+        <p class="hint">
+          Event positions are zero-based sample indices: stepAt raises the
+          target, returnAt changes it again, and disturbanceAt adds a sustained
+          input disturbance. Duration is dt × steps. A missing or invalid field
+          is rejected.
+        </p>
+        <textarea
+          id="json"
+          rows="18"
+          spellcheck="false"
+          maxlength="100000"
+          aria-label="Experiment JSON"
+        ></textarea
+        ><button id="apply" class="primary">Apply experiment</button>
+      </details>
+      <details>
+        <summary>Equations &amp; interpretation</summary>
+        <p>
+          The plant is dy/dt = (−y + gain × (applied command + disturbance)) /
+          tau. It uses the exact zero-order-hold update over each sample
+          interval. Commands are clipped before an integer-sample delay queue;
+          the initial queue contains clipped zero commands.
+        </p>
+        <p>
+          The derivative acts on a low-pass-filtered measurement difference,
+          avoiding a setpoint derivative kick. Conditional integration rejects
+          outward integral accumulation during saturation. Back-calculation
+          feeds the clipped-minus-unclipped command difference into the next
+          integral state.
+        </p>
+        <p>
+          All variants receive the same seeded uniform measurement-noise
+          sequence. These are explicit discrete controller conventions, not a
+          claim of equivalence to a particular industrial PID implementation. No
+          auto-tuning, stability guarantee, or hardware connection is provided.
+        </p>
+        <p>
+          Controller magnitudes above 1e9 stop that run with an explicit partial
+          result. Results depend on sampling, delay, model assumptions, and
+          gains. Use this as a numerical experiment, not a controller deployment
+          tool.
+        </p>
+      </details>
+      <footer>
+        <span>Observe the limit. Study the recovery.</span
+        ><span>Local simulation / no hardware connection</span>
+      </footer>
+    </main>
+  </body>
+</html>
