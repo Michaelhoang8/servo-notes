@@ -7,9 +7,9 @@ const names = {
     backCalculation: "Back-calculation",
   },
   colors = {
-    none: "#697574",
-    conditional: "#b77b52",
-    backCalculation: "#47796d",
+    none: "#a7afbd",
+    conditional: "#e2b082",
+    backCalculation: "#7ec7b5",
   };
 let result = null,
   worker = null,
@@ -119,7 +119,7 @@ function run(raw) {
 function drawChart() {
   const chart = $("chart");
   chart.replaceChildren();
-  chart.append(shape("rect", { width: 1000, height: 680, fill: "#fafcf8" }));
+  chart.append(shape("rect", { width: 1000, height: 680, fill: "#1b262b" }));
   chart.append(
     shape("title", {}, "Servo Notes: output, command and integral comparison"),
   );
@@ -185,7 +185,7 @@ function drawChart() {
         {
           x: 70,
           y: panel.top - 17,
-          fill: "#7b8983",
+          fill: "#a1b2b8",
           "font-family": "Arial",
           "font-size": 10,
           "letter-spacing": 1,
@@ -202,7 +202,7 @@ function drawChart() {
           y1: y,
           x2: 960,
           y2: y,
-          stroke: "#e2e7e0",
+          stroke: "#35434a",
           "stroke-width": 1,
         }),
       );
@@ -213,7 +213,7 @@ function drawChart() {
             x: 60,
             y: y + 4,
             "text-anchor": "end",
-            fill: "#7b8983",
+            fill: "#a1b2b8",
             "font-family": "Arial",
             "font-size": 10,
           },
@@ -232,7 +232,7 @@ function drawChart() {
           y1: panel.top,
           x2: X(at * result.input.dt),
           y2: panel.top + panel.height,
-          stroke: "#c5cec6",
+          stroke: "#63747b",
           "stroke-dasharray": "3 5",
         }),
       );
@@ -279,7 +279,7 @@ function drawChart() {
         y1: panel.top,
         x2: 70,
         y2: panel.top + panel.height,
-        stroke: "#344945",
+        stroke: "#d3e1e2",
         "stroke-width": 1,
         "stroke-dasharray": "2 3",
       }),
@@ -293,7 +293,7 @@ function drawChart() {
           x: X((duration * j) / 5),
           y: 650,
           "text-anchor": "middle",
-          fill: "#7b8983",
+          fill: "#a1b2b8",
           "font-family": "Arial",
           "font-size": 11,
         },
@@ -307,7 +307,7 @@ function drawChart() {
         x: 960,
         y: 673,
         "text-anchor": "end",
-        fill: "#7b8983",
+        fill: "#a1b2b8",
         "font-family": "Arial",
         "font-size": 9,
       },
@@ -491,3 +491,14 @@ $("file").onchange = async () => {
   }
 };
 run(example);
+
+for (const name of ["experiment", "metrics"]) {
+  $(name + "-open").onclick = () => {
+    stop();
+    $(name + "-panel").showModal();
+  };
+  $(name + "-close").onclick = () => $(name + "-panel").close();
+}
+new MutationObserver(() => {
+  $("experiment-status").textContent = $("status").textContent;
+}).observe($("status"), { childList: true });

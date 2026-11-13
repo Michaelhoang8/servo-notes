@@ -3,26 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Servo Notes · Sampled control</title>
+    <title>Servo Notes</title>
     <link rel="stylesheet" href="style.css" />
     <script type="module" src="app.js"></script>
   </head>
   <body>
     <header>
-      <a href="/">servo notes <span aria-hidden="true">∿</span></a
-      ><span>EMBEDDED CONTROL / EXPERIMENT BOOK</span
-      ><button id="open">Open experiment</button
-      ><input id="file" type="file" accept=".json" hidden />
+      <h1>Servo Notes</h1>
+      <div>
+        <button id="experiment-open">Plant &amp; timing</button
+        ><button id="metrics-open">Results &amp; files</button
+        ><button id="open">Open experiment</button
+        ><input id="file" type="file" accept=".json" hidden />
+      </div>
     </header>
     <main>
-      <div class="intro">
-        <p class="eyebrow">When the actuator reaches its limit.</p>
-        <h1>Find the way<br /><em>back to steady.</em></h1>
-        <p>
-          Compare three PID controllers through saturation, command delay, and a
-          change of course.
-        </p>
-      </div>
       <form id="tuning" class="tuning">
         <label
           >Proportional Kp<input
@@ -65,82 +60,54 @@
       </form>
       <p id="status" role="status" aria-live="polite"></p>
       <section id="result" hidden>
-        <div class="legend">
-          <span class="none">Ordinary PID</span
-          ><span class="conditional">Conditional integration</span
-          ><span class="backCalculation">Back-calculation</span
-          ><span class="target">Setpoint</span>
+        <div class="scope">
+          <div class="chart-wrap">
+            <svg
+              id="chart"
+              viewBox="0 0 1000 680"
+              role="img"
+              aria-label="Output, actuator command and integral-state comparison"
+              xmlns="http://www.w3.org/2000/svg"
+            ></svg>
+          </div>
+          <p class="hint">
+            Click the plot or use the time slider to inspect a sample. Curves
+            show true plant output, commanded actuator input, and the integral
+            state after each controller update.
+          </p>
+          <div class="transport">
+            <button id="play">Play cursor</button
+            ><label
+              >Inspection time<input
+                id="step"
+                type="range"
+                min="0"
+                value="0" /></label
+            ><span id="time"></span>
+          </div>
         </div>
-        <div class="chart-wrap">
-          <svg
-            id="chart"
-            viewBox="0 0 1000 680"
-            role="img"
-            aria-label="Output, actuator command and integral-state comparison"
-            xmlns="http://www.w3.org/2000/svg"
-          ></svg>
-        </div>
-        <p class="hint">
-          Click the plot or use the time slider to inspect a sample. Curves show
-          true plant output, commanded actuator input, and the integral state
-          after each controller update.
-        </p>
-        <div class="transport">
-          <button id="play">Play cursor</button
-          ><label
-            >Inspection time<input
-              id="step"
-              type="range"
-              min="0"
-              value="0" /></label
-          ><span id="time"></span>
-        </div>
-        <div class="section-heading">
-          <h2>At this instant.</h2>
-          <label
-            >Controller<select id="mode">
-              <option value="none">Ordinary PID</option>
-              <option value="conditional">Conditional integration</option>
-              <option value="backCalculation">Back-calculation</option>
-            </select></label
-          >
-        </div>
-        <div id="sample" class="sample"></div>
-        <p id="sample-note" class="hint"></p>
-        <div class="section-heading">
-          <h2>Across the experiment.</h2>
-          <span id="model-note"></span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Controller</th>
-                <th>Total IAE</th>
-                <th>Recovery IAE</th>
-                <th>RMSE</th>
-                <th>Saturated steps</th>
-                <th>Peak |integral|</th>
-                <th>Final error</th>
-              </tr>
-            </thead>
-            <tbody id="metrics"></tbody>
-          </table>
-        </div>
-        <p class="hint">
-          IAE integrates absolute true tracking error over the sampled
-          intervals. Recovery IAE starts at the return setpoint. RMSE also uses
-          true output, not noisy measurements. Metrics for an interrupted run
-          cover only its completed prefix.
-        </p>
-        <div class="exports">
-          <button id="save">Save experiment</button
-          ><button id="export">Export all traces</button
-          ><button id="csv">Export sample CSV</button
-          ><button id="svg">Export chart SVG</button>
-        </div>
+        <aside>
+          <div class="section-heading">
+            <h2>Sample</h2>
+            <label
+              >Controller<select id="mode">
+                <option value="none">Ordinary PID</option>
+                <option value="conditional">Conditional integration</option>
+                <option value="backCalculation">Back-calculation</option>
+              </select></label
+            >
+          </div>
+          <div id="sample" class="sample"></div>
+          <p id="sample-note" class="hint"></p>
+        </aside>
       </section>
-      <details>
+    </main>
+    <dialog id="experiment-panel" aria-label="Plant and timing">
+      <div class="dialog-heading">
+        <h2>Plant &amp; timing</h2>
+        <button id="experiment-close">Close</button>
+      </div>
+      <details open>
         <summary>Edit plant, timing &amp; disturbances</summary>
         <p class="hint">
           Event positions are zero-based sample indices: stepAt raises the
@@ -185,10 +152,45 @@
           tool.
         </p>
       </details>
-      <footer>
-        <span>Observe the limit. Study the recovery.</span
-        ><span>Local simulation / no hardware connection</span>
-      </footer>
-    </main>
+      <p id="experiment-status" role="status"></p>
+    </dialog>
+    <dialog id="metrics-panel" aria-label="Run results">
+      <div class="dialog-heading">
+        <h2>Results &amp; files</h2>
+        <button id="metrics-close">Close</button>
+      </div>
+      <div class="section-heading">
+        <h2>Run metrics</h2>
+        <span id="model-note"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Controller</th>
+              <th>Total IAE</th>
+              <th>Recovery IAE</th>
+              <th>RMSE</th>
+              <th>Saturated steps</th>
+              <th>Peak |integral|</th>
+              <th>Final error</th>
+            </tr>
+          </thead>
+          <tbody id="metrics"></tbody>
+        </table>
+      </div>
+      <p class="hint">
+        IAE integrates absolute true tracking error over the sampled intervals.
+        Recovery IAE starts at the return setpoint. RMSE also uses true output,
+        not noisy measurements. Metrics for an interrupted run cover only its
+        completed prefix.
+      </p>
+      <div class="exports">
+        <button id="save">Save experiment</button
+        ><button id="export">Export all traces</button
+        ><button id="csv">Export sample CSV</button
+        ><button id="svg">Export chart SVG</button>
+      </div>
+    </dialog>
   </body>
 </html>

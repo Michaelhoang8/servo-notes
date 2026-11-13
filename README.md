@@ -4,6 +4,10 @@ A sampled-control experiment comparing ordinary PID, conditional integration, an
 
 ![Servo Notes anti-windup comparison](docs/workbench.png)
 
+## Interface
+
+Three aligned plots share a time cursor, with the selected controller sample beside them. Gain inputs remain above the plots; plant configuration, run metrics, and exports open separately. The chart keeps its original aspect ratio so pointer inspection stays aligned with the time axis, and scrolls within its panel on narrow screens.
+
 ## Run
 
 Requires Python 3.10+; no runtime dependencies or build step.
