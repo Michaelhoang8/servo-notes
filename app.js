@@ -13,7 +13,8 @@ const names = {
   };
 let result = null,
   worker = null,
-  timer = null;
+  timer = null,
+  chartScales = {};
 const el = (tag, text, cls) => {
   const n = document.createElement(tag);
   if (text !== undefined) n.textContent = text;
@@ -108,6 +109,11 @@ function run(raw) {
     );
     drawChart();
     inspect();
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
+      $("chart").animate([{ opacity: 0.5 }, { opacity: 1 }], {
+        duration: 350,
+        easing: "ease-out",
+      });
   };
   worker.onerror = () => {
     $("status").textContent = "The simulation worker failed. Reload and retry.";
@@ -119,6 +125,18 @@ function run(raw) {
 function drawChart() {
   const chart = $("chart");
   chart.replaceChildren();
+  chartScales = {};
+  const defs = shape("defs", {}),
+    glow = shape("filter", {
+      id: "sample-glow",
+      x: "-100%",
+      y: "-100%",
+      width: "300%",
+      height: "300%",
+    });
+  glow.append(shape("feGaussianBlur", { stdDeviation: 2 }));
+  defs.append(glow);
+  chart.append(defs);
   chart.append(shape("rect", { width: 1000, height: 680, fill: "#1b262b" }));
   chart.append(
     shape("title", {}, "Servo Notes: output, command and integral comparison"),
@@ -179,6 +197,7 @@ function drawChart() {
     high += pad;
     const Y = (v) =>
       panel.top + panel.height - ((v - low) / (high - low)) * panel.height;
+    chartScales[panel.key] = Y;
     chart.append(
       shape(
         "text",
@@ -267,11 +286,27 @@ function drawChart() {
           d,
           fill: "none",
           stroke: colors[r.mode],
+          "data-series": r.mode,
           "stroke-width": 1.8,
           "stroke-linejoin": "round",
         }),
       );
     }
+    for (const halo of [true, false])
+      chart.append(
+        shape("circle", {
+          "data-sample": panel.key,
+          "data-halo": String(halo),
+          cx: 70,
+          cy: panel.top,
+          r: halo ? 7 : 4,
+          fill: colors.none,
+          opacity: halo ? 0.55 : 1,
+          ...(halo
+            ? { filter: "url(#sample-glow)" }
+            : { stroke: "#edf8f3", "stroke-width": 1.2 }),
+        }),
+      );
     chart.append(
       shape("line", {
         "data-cursor": "true",
@@ -327,6 +362,26 @@ function inspect() {
     .forEach((line) => {
       line.setAttribute("x1", x);
       line.setAttribute("x2", x);
+    });
+  $("chart")
+    .querySelectorAll("[data-series]")
+    .forEach((path) => {
+      const selected = path.dataset.series === run.mode;
+      path.setAttribute("stroke-width", selected ? 2.8 : 1.5);
+      path.setAttribute("opacity", selected ? 1 : 0.5);
+    });
+  $("chart")
+    .querySelectorAll("[data-sample]")
+    .forEach((marker) => {
+      marker.setAttribute("visibility", row ? "visible" : "hidden");
+      if (row) {
+        marker.setAttribute("cx", x);
+        marker.setAttribute(
+          "cy",
+          chartScales[marker.dataset.sample](row[marker.dataset.sample]),
+        );
+        marker.setAttribute("fill", colors[run.mode]);
+      }
     });
   $("sample").replaceChildren();
   if (!row) {

@@ -8,6 +8,8 @@ A sampled-control experiment comparing ordinary PID, conditional integration, an
 
 Three aligned plots share a time cursor, with the selected controller sample beside them. Gain inputs remain above the plots; plant configuration, run metrics, and exports open separately. The chart keeps its original aspect ratio so pointer inspection stays aligned with the time axis, and scrolls within its panel on narrow screens.
 
+The selected controller is emphasized in all three plots. Glowing sample markers show its output, command, and integral values at the inspection time; markers disappear outside a partial run’s valid prefix. SVG exports retain the selected traces and markers. New comparisons fade in briefly unless reduced motion is requested.
+
 ## Run
 
 Requires Python 3.10+; no runtime dependencies or build step.
